@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>Welcome to My Flights Application</title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous"/>
+
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+
+        <meta charset="UTF-8"/>
+    </head>
+    <body>
+        <h1 class="jumbotron">Passengers</h1>
+
+        <div class="container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>First name</th>
+                        <th>Last name</th>
+                        <th>Frequent flyer miles</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="passenger-list-data">
+                    <tr>
+                        <td>X</td>
+                        <td>X</td>
+                        <td>X</td>
+                        <td>X</td>
+                    </tr>
+                    <tr>
+                        <td>X</td>
+                        <td>X</td>
+                        <td>X</td>
+                        <td>X</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <form id="passenger-create-form">
+                <div class="form-group">
+                    <label for="firstname">First name:</label>
+                    <input class="form-control" id="firstname" name="firstname"/>
+                </div>
+                <div class="form-group">
+                    <label for="lastname">First name:</label>
+                    <input class="form-control" id="lastname" name="lastname"/>
+                </div>
+                <div class="form-group">
+                    <label for="frequentFlyerMiles">Frequent flyer miles:</label>
+                    <input class="form-control" id="frequentFlyerMiles" name="lastname"/>
+                </div>
+                <input type="submit" class="btn btn-primary" value="Create">
+            </form>
+        </div>
+
+        <script>
+            $("#passenger-create-form").submit(function(e) {
+                e.preventDefault();
+
+//                {
+//                    "id": 1000,
+//                    "firstname": "Natasha",
+//                    "lastname": "Johanson",
+//                    "frequentFlyerMiles": 1574
+//                },
+
+                let p = {
+                    firstname: $(this.firstname).val(),
+                    lastname: $(this.lastname).val(),
+                    frequentFlyerMiles: Number.parseInt($(this.frequentFlyerMiles).val())
+                };
+
+                $.ajax({
+                    method: 'post',
+                    url: '/api/passenger',
+                    contentType: 'application/json',
+                    data: JSON.stringify(p), // Better way to do this?
+                    processData: false,
+                    success: function() {
+                        // Refresh data table
+                        loadPassengers();
+
+                    }
+                });
+
+                this.reset();
+            });
+
+            loadPassengers();
+
+            function loadPassengers() {
+                $.getJSON('/api/passenger/all', function (passengers) {
+                    let $tbody = $("#passenger-list-data").empty();
+
+                    for (let passenger of passengers) {
+                        let $removeButton = $("<button>").addClass("btn").addClass("btn-danger").text("Remove");
+                        $removeButton.click(function(e) {
+                            $.ajax({
+                                method: 'delete',
+                                url: `/api/passenger/${passenger.id}`,
+                                success: loadPassengers
+                            });
+                        });
+
+                        let $row = $('<tr>')
+                            .append($('<td>').text(passenger.id))
+                            .append($('<td>').text(passenger.firstname))
+                            .append($('<td>').text(passenger.lastname))
+                            .append($('<td>').text("(todo)"))
+                            .append($('<td>').append($removeButton));
+                        $tbody.append($row);
+                    }
+                });
+            }
+        </script>
+
+    </body>
+</html>
